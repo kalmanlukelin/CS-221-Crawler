@@ -56,7 +56,7 @@ class CrawlerFrame(IApplication):
     
 
 max_url=None
-outlinks=0
+max_outlinks=0
 
 def extract_next_links(rawDataObj):
     outputLinks = []
@@ -70,35 +70,38 @@ def extract_next_links(rawDataObj):
     
     Suggested library: lxml
     '''
+    urls=set()
     orig_url=rawDataObj.url
     orig_cont=rawDataObj.content
 
-    urls=set()
+    if rawDataObj.is_redirected:
+        orig_url=rawDataObj.final_url
     for item in BeautifulSoup(orig_cont, "lxml").findAll('a'):
         url=item.get('href')
         url = urljoin(orig_url, url) # Ensure abolute url.
         if is_valid(url): 
             urls.add(url)
-            #print "Valid%s" % url
         else:
             print "Invalid url %s" % url
 
     for url in urls:
         outputLinks.append(url)
 
-    print "length of output links %d" % len(outputLinks)
-    
     # Record the url that has the most out links
-    global outlinks
+    global max_outlinks
     global max_url
     len_outlinks=len(outputLinks)
-    if len_outlinks > outlinks:
-        outlinks=len_outlinks
+    if len_outlinks > max_outlinks:
+        max_outlinks=len_outlinks
         max_url=orig_url
-        print "max_url: %s" % max_url
-        print "outlinks: %d" % len_outlinks
+
+    print "length of output links %d" % len(outputLinks)
+    print "max_url: %s" % max_url
+    print "max_outlinks: %d" % max_outlinks
 
     return outputLinks
+
+trap={"http://calendar.ics.uci.edu"}
 
 def is_valid(url):
     '''
@@ -107,6 +110,13 @@ def is_valid(url):
     Robot rules and duplication rules are checked separately.
     This is a great place to filter out crawler traps.
     '''
+    # Check if the url is absolute.
+    if not bool(urlparse(url).netloc): return False
+
+    # Check the crwaler trap.
+    for t in trap:
+        if t in url: return False
+
     parsed = urlparse(url)
     if parsed.scheme not in set(["http", "https"]):
         return False
