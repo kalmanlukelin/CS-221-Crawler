@@ -1,5 +1,5 @@
 import logging
-from datamodel.search.Tingyulin_datamodel import TingyulinLink, OneTingyulinUnProcessedLink
+from datamodel.search.TingyulinChuanchunkuoPengjhihlin_datamodel import TingyulinChuanchunkuoPengjhihlinLink, OneTingyulinChuanchunkuoPengjhihlinUnProcessedLink
 from spacetime.client.IApplication import IApplication
 from spacetime.client.declarations import Producer, GetterSetter, Getter
 from lxml import html,etree
@@ -7,36 +7,36 @@ import re, os
 from time import time
 from uuid import uuid4
 
-from urlparse import urlparse, parse_qs
+from urlparse import urlparse, parse_qs, urljoin
 from uuid import uuid4
 from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 LOG_HEADER = "[CRAWLER]"
 
-@Producer(TingyulinLink)
-@GetterSetter(OneTingyulinUnProcessedLink)
+@Producer(TingyulinChuanchunkuoPengjhihlinLink)
+@GetterSetter(OneTingyulinChuanchunkuoPengjhihlinUnProcessedLink)
 class CrawlerFrame(IApplication):
-    app_id = "Tingyulin"
+    app_id = "TingyulinChuanchunkuoPengjhihlin"
 
     def __init__(self, frame):
-        self.app_id = "Tingyulin"
+        self.app_id = "TingyulinChuanchunkuoPengjhihlin"
         self.frame = frame
 
 
     def initialize(self):
         self.count = 0
-        links = self.frame.get_new(OneTingyulinUnProcessedLink)
+        links = self.frame.get_new(OneTingyulinChuanchunkuoPengjhihlinUnProcessedLink)
         if len(links) > 0:
             print "Resuming from the previous state."
             self.download_links(links)
         else:
-            l = TingyulinLink("http://www.ics.uci.edu/")
+            l = TingyulinChuanchunkuoPengjhihlinLink("http://www.ics.uci.edu/")
             print l.full_url
             self.frame.add(l)
 
     def update(self):
-        unprocessed_links = self.frame.get_new(OneTingyulinUnProcessedLink)
+        unprocessed_links = self.frame.get_new(OneTingyulinChuanchunkuoPengjhihlinUnProcessedLink)
         if unprocessed_links:
             self.download_links(unprocessed_links)
 
@@ -47,13 +47,17 @@ class CrawlerFrame(IApplication):
             links = extract_next_links(downloaded)
             for l in links:
                 if is_valid(l):
-                    self.frame.add(TingyulinLink(l))
+                    self.frame.add(TingyulinChuanchunkuoPengjhihlinLink(l))
 
     def shutdown(self):
         print (
             "Time time spent this session: ",
             time() - self.starttime, " seconds.")
     
+
+max_url=None
+outlinks=0
+
 def extract_next_links(rawDataObj):
     outputLinks = []
     '''
@@ -66,19 +70,34 @@ def extract_next_links(rawDataObj):
     
     Suggested library: lxml
     '''
+    orig_url=rawDataObj.url
+    orig_cont=rawDataObj.content
 
     urls=set()
-    for item in BeautifulSoup(rawDataObj.content, "lxml").findAll('a'):
+    for item in BeautifulSoup(orig_cont, "lxml").findAll('a'):
         url=item.get('href')
+        url = urljoin(orig_url, url) # Ensure abolute url.
         if is_valid(url): 
             urls.add(url)
-            print "%s" % url
+            #print "Valid%s" % url
+        else:
+            print "Invalid url %s" % url
 
     for url in urls:
         outputLinks.append(url)
 
     print "length of output links %d" % len(outputLinks)
     
+    # Record the url that has the most out links
+    global outlinks
+    global max_url
+    len_outlinks=len(outputLinks)
+    if len_outlinks > outlinks:
+        outlinks=len_outlinks
+        max_url=orig_url
+        print "max_url: %s" % max_url
+        print "outlinks: %d" % len_outlinks
+
     return outputLinks
 
 def is_valid(url):
@@ -88,8 +107,6 @@ def is_valid(url):
     Robot rules and duplication rules are checked separately.
     This is a great place to filter out crawler traps.
     '''
-    if url == None or url == '': return False
-
     parsed = urlparse(url)
     if parsed.scheme not in set(["http", "https"]):
         return False

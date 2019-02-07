@@ -7,7 +7,7 @@ import uuid
 
 sys.path.append(os.path.realpath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from datamodel.search.Tingyulin_datamodel import TingyulinLink
+from datamodel.search.TingyulinChuanchunkuoPengjhihlin_datamodel import TingyulinChuanchunkuoPengjhihlinLink
 from spacetime.client.IApplication import IApplication
 from spacetime.client.declarations import Deleter, Getter
 from spacetime.connectors.spacetime import ObjectlessSpacetimeConnection
@@ -18,12 +18,12 @@ from applications.search.crawler_frame import CrawlerFrame, is_valid
 logger = logging.getLogger(__name__)
 LOG_HEADER = "[DELETEFRONTIER]"
 
-@Deleter(TingyulinLink)
-@Getter(TingyulinLink)
+@Deleter(TingyulinChuanchunkuoPengjhihlinLink)
+@Getter(TingyulinChuanchunkuoPengjhihlinLink)
 class DeleteFrontierFrame(IApplication):
 
     def __init__(self, frame):
-        self.app_id = "Tingyulin"
+        self.app_id = "TingyulinChuanchunkuoPengjhihlin"
         self.frame = frame
 
 
@@ -32,12 +32,12 @@ class DeleteFrontierFrame(IApplication):
 
     def update(self):
         print "Deleting invalid links. This might take a while."
-        ls = self.frame.get(TingyulinLink)
+        ls = self.frame.get(TingyulinChuanchunkuoPengjhihlinLink)
         print "Found ", len(ls), " links."
         count = 0
         for l in ls:
             if not is_valid(l.full_url):
-                self.frame.delete(TingyulinLink, l)
+                self.frame.delete(TingyulinChuanchunkuoPengjhihlinLink, l)
                 count += 1
         print "Deleting", count, "links."
         self.done = True
@@ -56,7 +56,7 @@ class Simulation(object):
         Constructor
         '''
         objectless_connector = ObjectlessSpacetimeConnection(
-            "ResetFrontier_Tingyulin".format(CrawlerFrame.app_id),
+            "ResetFrontier_TingyulinChuanchunkuoPengjhihlin".format(CrawlerFrame.app_id),
             address = "http://" + address + ":" + str(port) + "/")
         frame_c = ClientFrame(
             objectless_connector,

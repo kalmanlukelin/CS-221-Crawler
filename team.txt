@@ -2,3 +2,5 @@
 # personn1, 99944444
 # personn2, 99955555
 tingyulin, 73442988
+chuanchunkuo, 73369118
+pengjhihlin, 62681937
