@@ -37,7 +37,9 @@ class CheckFrontierFrame(IApplication):
                 try:
                     f.write("%s\t%s\n" % (l.url, "complete" if l.download_complete else "incomplete"))
                 except UnicodeError:
-                    print "Unicode error when writing to file for url: ", l.url, "status: ", "complete" if l.download_complete else "incomplete"
+                    #print "Unicode error when writing to file for url: ", l.url, "status: ", "complete" if l.download_complete else "incomplete"
+                    print ("Unicode error when writing to file for url: %s" % l.url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
+                    print "status: ", "complete" if l.download_complete else "incomplete"
         print "Wrote the status to frontier_summary.txt"
         self.done = True
 

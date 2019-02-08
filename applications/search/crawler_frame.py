@@ -7,6 +7,7 @@ import re, os
 from time import time
 from uuid import uuid4
 
+import sys
 from urlparse import urlparse, parse_qs, urljoin
 from uuid import uuid4
 from bs4 import BeautifulSoup
@@ -82,7 +83,7 @@ def extract_next_links(rawDataObj):
         if is_valid(url): 
             urls.add(url)
         else:
-            print "Invalid url %s" % url
+            print ("Invalid url %s" % url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
 
     for url in urls:
         outputLinks.append(url)
@@ -95,8 +96,9 @@ def extract_next_links(rawDataObj):
         max_outlinks=len_outlinks
         max_url=orig_url
 
-    print "length of output links %d" % len(outputLinks)
-    print "max_url: %s" % max_url
+    print ("url visited: %s" % rawDataObj.url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
+    print ("Number of links %d" % len(outputLinks)).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
+    print ("max_url: %s" % max_url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
     print "max_outlinks: %d" % max_outlinks
 
     return outputLinks
