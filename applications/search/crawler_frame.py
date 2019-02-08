@@ -11,6 +11,7 @@ import sys
 from urlparse import urlparse, parse_qs, urljoin
 from uuid import uuid4
 from bs4 import BeautifulSoup
+import tldextract
 
 logger = logging.getLogger(__name__)
 LOG_HEADER = "[CRAWLER]"
@@ -58,6 +59,7 @@ class CrawlerFrame(IApplication):
 
 max_url=None
 max_outlinks=0
+subdomains = {}
 
 def extract_next_links(rawDataObj):
     outputLinks = []
@@ -100,6 +102,9 @@ def extract_next_links(rawDataObj):
     print ("Number of links %d" % len(outputLinks)).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
     print ("max_url: %s" % max_url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
     print "max_outlinks: %d" % max_outlinks
+    sub = tldextract.extract(rawDataObj.url).subdomain
+    global subdomains
+    subdomains[sub] = subdomains.get(sub,0)+1
 
     return outputLinks
 
@@ -128,8 +133,11 @@ def is_valid(url):
             + "|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf" \
             + "|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso|epub|dll|cnf|tgz|sha1" \
             + "|thmx|mso|arff|rtf|jar|csv"\
-            + "|rm|smil|wmv|swf|wma|zip|rar|gz|pdf)$", parsed.path.lower())
+            + "|rm|smil|wmv|swf|wma|zip|rar|gz|pdf)$", parsed.path.lower()) 
+            #and not re.match("^.*?(/.+?/).*?\1.*$|^.*?/(.+?/)\2.*$",parsed.path.lower()) 
 
+
+# ^.*?(/.+?/).*?\1.*$|^.*?/(.+?/)\2.*$
     except TypeError:
         print ("TypeError for ", parsed)
         return False
