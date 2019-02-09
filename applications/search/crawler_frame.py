@@ -24,7 +24,7 @@ class CrawlerFrame(IApplication):
     def __init__(self, frame):
         self.app_id = "TingyuChuanchunPengjhih"
         self.frame = frame
-
+        self.subdomains = {}
 
     def initialize(self):
         self.count = 0
@@ -47,6 +47,9 @@ class CrawlerFrame(IApplication):
             print ("Got a link to download: %s" % link.full_url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
             downloaded = link.download()
             links = extract_next_links(downloaded)
+            sub = tldextract.extract(downloaded.url).subdomain
+            self.subdomains[sub] = self.subdomains.get(sub,0)+1
+            print self.subdomains
             for l in links:
                 if is_valid(l):
                     self.frame.add(TingyuChuanchunPengjhihLink(l))
@@ -58,7 +61,6 @@ class CrawlerFrame(IApplication):
     
 max_url=None
 max_outlinks=0
-subdomains = {}
 
 def extract_next_links(rawDataObj):
     outputLinks = []
@@ -97,6 +99,7 @@ def extract_next_links(rawDataObj):
         max_outlinks=len_outlinks
         max_url=orig_url
 
+<<<<<<< HEAD
     # Record number of urls in subdomain
     sub = tldextract.extract(rawDataObj.url).subdomain
     global subdomains
@@ -129,6 +132,13 @@ def extract_next_links(rawDataObj):
         print (str(d) +":"+ str(subdomains[d])).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
     print("")
 
+=======
+    print ("url visited: %s" % rawDataObj.url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
+    print ("Number of links %d" % len(outputLinks)).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
+    print ("max_url: %s" % max_url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
+    print "max_outlinks: %d" % max_outlinks
+   
+>>>>>>> 3a52829ebbd4d3a8fa7944653b18bd2ea69b4024
     return outputLinks
 
 relative_url=[]
