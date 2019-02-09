@@ -61,6 +61,7 @@ class CrawlerFrame(IApplication):
     
 max_url=None
 max_outlinks=0
+subdomains={}
 
 def extract_next_links(rawDataObj):
     outputLinks = []
@@ -99,7 +100,6 @@ def extract_next_links(rawDataObj):
         max_outlinks=len_outlinks
         max_url=orig_url
 
-<<<<<<< HEAD
     # Record number of urls in subdomain
     sub = tldextract.extract(rawDataObj.url).subdomain
     global subdomains
@@ -131,14 +131,11 @@ def extract_next_links(rawDataObj):
     for d in subdomains:
         print (str(d) +":"+ str(subdomains[d])).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
     print("")
-
-=======
     print ("url visited: %s" % rawDataObj.url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
     print ("Number of links %d" % len(outputLinks)).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
     print ("max_url: %s" % max_url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
     print "max_outlinks: %d" % max_outlinks
    
->>>>>>> 3a52829ebbd4d3a8fa7944653b18bd2ea69b4024
     return outputLinks
 
 relative_url=[]
