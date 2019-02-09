@@ -1,5 +1,5 @@
 import logging
-from datamodel.search.TingyulinChuanchunkuoPengjhihlin_datamodel import TingyulinChuanchunkuoPengjhihlinLink, OneTingyulinChuanchunkuoPengjhihlinUnProcessedLink
+from datamodel.search.TingyuChuanchunPengjhih_datamodel import TingyuChuanchunPengjhihLink, OneTingyuChuanchunPengjhihUnProcessedLink
 from spacetime.client.IApplication import IApplication
 from spacetime.client.declarations import Producer, GetterSetter, Getter
 from lxml import html,etree
@@ -16,47 +16,46 @@ import tldextract
 logger = logging.getLogger(__name__)
 LOG_HEADER = "[CRAWLER]"
 
-@Producer(TingyulinChuanchunkuoPengjhihlinLink)
-@GetterSetter(OneTingyulinChuanchunkuoPengjhihlinUnProcessedLink)
+@Producer(TingyuChuanchunPengjhihLink)
+@GetterSetter(OneTingyuChuanchunPengjhihUnProcessedLink)
 class CrawlerFrame(IApplication):
-    app_id = "TingyulinChuanchunkuoPengjhihlin"
+    app_id = "TingyuChuanchunPengjhih"
 
     def __init__(self, frame):
-        self.app_id = "TingyulinChuanchunkuoPengjhihlin"
+        self.app_id = "TingyuChuanchunPengjhih"
         self.frame = frame
 
 
     def initialize(self):
         self.count = 0
-        links = self.frame.get_new(OneTingyulinChuanchunkuoPengjhihlinUnProcessedLink)
+        links = self.frame.get_new(OneTingyuChuanchunPengjhihUnProcessedLink)
         if len(links) > 0:
             print "Resuming from the previous state."
             self.download_links(links)
         else:
-            l = TingyulinChuanchunkuoPengjhihlinLink("http://www.ics.uci.edu/")
-            print l.full_url
+            l = TingyuChuanchunPengjhihLink("http://www.ics.uci.edu/")
+            print (l.full_url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
             self.frame.add(l)
 
     def update(self):
-        unprocessed_links = self.frame.get_new(OneTingyulinChuanchunkuoPengjhihlinUnProcessedLink)
+        unprocessed_links = self.frame.get_new(OneTingyuChuanchunPengjhihUnProcessedLink)
         if unprocessed_links:
             self.download_links(unprocessed_links)
 
     def download_links(self, unprocessed_links):
         for link in unprocessed_links:
-            print "Got a link to download:", link.full_url
+            print ("Got a link to download: %s" % link.full_url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
             downloaded = link.download()
             links = extract_next_links(downloaded)
             for l in links:
                 if is_valid(l):
-                    self.frame.add(TingyulinChuanchunkuoPengjhihlinLink(l))
+                    self.frame.add(TingyuChuanchunPengjhihLink(l))
 
     def shutdown(self):
         print (
             "Time time spent this session: ",
             time() - self.starttime, " seconds.")
     
-
 max_url=None
 max_outlinks=0
 subdomains = {}
@@ -79,13 +78,13 @@ def extract_next_links(rawDataObj):
 
     if rawDataObj.is_redirected:
         orig_url=rawDataObj.final_url
-    for item in BeautifulSoup(orig_cont, "lxml").findAll('a'):
+
+    p=BeautifulSoup(orig_cont, "lxml").findAll('a')
+
+    for item in p:
         url=item.get('href')
         url = urljoin(orig_url, url) # Ensure abolute url.
-        if is_valid(url): 
-            urls.add(url)
-        else:
-            print ("Invalid url %s" % url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
+        urls.add(url)
 
     for url in urls:
         outputLinks.append(url)
@@ -98,17 +97,45 @@ def extract_next_links(rawDataObj):
         max_outlinks=len_outlinks
         max_url=orig_url
 
-    print ("url visited: %s" % rawDataObj.url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
-    print ("Number of links %d" % len(outputLinks)).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
-    print ("max_url: %s" % max_url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
-    print "max_outlinks: %d" % max_outlinks
+    # Record number of urls in subdomain
     sub = tldextract.extract(rawDataObj.url).subdomain
     global subdomains
     subdomains[sub] = subdomains.get(sub,0)+1
+    
+    print("")
+    print "relative url: "+str(relative_url)
+    print "r_total: "+str(len(relative_url))
+
+    print("")
+    # print "dynamic url: "+str(dym_url)
+    print "dym_total: "+str(len(dym_url))
+
+    print("")
+    #print "calendar url: "+str(calen_url)
+    print "spec_total: "+str(len(spec_url))
+
+    print("") 
+    print "long url: "+str(long_url)
+    print "long_total: "+str(len(long_url))
+
+    print("")
+    print "repeat url "+str(repeat_url) 
+    print "repeat_total: "+str(len(repeat_url))
+    
+    print("")
+    print ("max_url: %s" % max_url).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
+    print "max_outlinks: %d" % max_outlinks
+    for d in subdomains:
+        print (str(d) +":"+ str(subdomains[d])).encode(sys.stdin.encoding, "replace").decode(sys.stdin.encoding)
+    print("")
 
     return outputLinks
 
-trap={"http://calendar.ics.uci.edu"}
+relative_url=[]
+dym_url=[]
+spec_url=["^.*calendar.*$", "^.*ganglia.*$"]
+long_url=[]
+repeat_url=[]
 
 def is_valid(url):
     '''
@@ -117,12 +144,47 @@ def is_valid(url):
     Robot rules and duplication rules are checked separately.
     This is a great place to filter out crawler traps.
     '''
-    # Check if the url is absolute.
-    if not bool(urlparse(url).netloc): return False
+    global relative_url
+    global dym_url
+    global spec_url
+    global long_url
+    global repeat_url
 
-    # Check the crwaler trap.
-    for t in trap:
-        if t in url: return False
+    #print "current url: "+str(url)
+
+    # Check if the url is absolute.
+    if not bool(urlparse(url).netloc): 
+        relative_url.append(url)
+        return False
+
+    # Filter dynamic url
+    dynam={'#', '&', '$', '+', '=', '?', '%', 'cgi'}
+    for d in dynam:
+        if d in url:
+            dym_url.append(url)
+            return False
+    
+    # Filter calendar url
+    for s in spec_url:
+        if re.search(s, url): 
+            spec_url.append(url)
+            return False
+
+    # Filter long url ex: http://www.example.com/uU5dR1gpXCHX45K8aOMct11OrLtyrYJeUnw_RxaUsg.eyJpbnN0YW5jZUlkIjoiMTNkZDc
+    if re.search("^.*/[^/]{300,}$", url):
+        long_url.append(url)
+        return False
+
+    # Filter repeating directories ex : http://www.example.org/media/media/page/sites/css/html-reset.css
+    parsed_url=urlparse(url)
+    url_path=parsed_url.path
+    duplic_path=set()
+    for u in url_path.split('/'):
+        if u != "":
+            if u in duplic_path: 
+                repeat_url.append(url)
+                return False
+            duplic_path.add(u)
 
     parsed = urlparse(url)
     if parsed.scheme not in set(["http", "https"]):
@@ -141,4 +203,3 @@ def is_valid(url):
     except TypeError:
         print ("TypeError for ", parsed)
         return False
-

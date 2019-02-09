@@ -7,7 +7,7 @@ import uuid
 
 sys.path.append(os.path.realpath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from datamodel.search.TingyulinChuanchunkuoPengjhihlin_datamodel import TingyulinChuanchunkuoPengjhihlinLink
+from datamodel.search.TingyuChuanchunPengjhih_datamodel import TingyuChuanchunPengjhihLink
 from spacetime.client.IApplication import IApplication
 from spacetime.client.declarations import Deleter, Getter
 from spacetime.connectors.spacetime import ObjectlessSpacetimeConnection
@@ -18,12 +18,12 @@ from applications.search.crawler_frame import CrawlerFrame, is_valid
 logger = logging.getLogger(__name__)
 LOG_HEADER = "[DELETEFRONTIER]"
 
-@Deleter(TingyulinChuanchunkuoPengjhihlinLink)
-@Getter(TingyulinChuanchunkuoPengjhihlinLink)
+@Deleter(TingyuChuanchunPengjhihLink)
+@Getter(TingyuChuanchunPengjhihLink)
 class DeleteFrontierFrame(IApplication):
 
     def __init__(self, frame):
-        self.app_id = "TingyulinChuanchunkuoPengjhihlin"
+        self.app_id = "TingyuChuanchunPengjhih"
         self.frame = frame
 
 
@@ -32,12 +32,12 @@ class DeleteFrontierFrame(IApplication):
 
     def update(self):
         print "Deleting invalid links. This might take a while."
-        ls = self.frame.get(TingyulinChuanchunkuoPengjhihlinLink)
+        ls = self.frame.get(TingyuChuanchunPengjhihLink)
         print "Found ", len(ls), " links."
         count = 0
         for l in ls:
             if not is_valid(l.full_url):
-                self.frame.delete(TingyulinChuanchunkuoPengjhihlinLink, l)
+                self.frame.delete(TingyuChuanchunPengjhihLink, l)
                 count += 1
         print "Deleting", count, "links."
         self.done = True
@@ -56,7 +56,7 @@ class Simulation(object):
         Constructor
         '''
         objectless_connector = ObjectlessSpacetimeConnection(
-            "ResetFrontier_TingyulinChuanchunkuoPengjhihlin".format(CrawlerFrame.app_id),
+            "ResetFrontier_TingyuChuanchunPengjhih".format(CrawlerFrame.app_id),
             address = "http://" + address + ":" + str(port) + "/")
         frame_c = ClientFrame(
             objectless_connector,
